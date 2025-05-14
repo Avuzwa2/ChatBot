@@ -1,155 +1,182 @@
-﻿
 using System;
 using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
-using System.Threading; // for typing effect
+using System.Threading;
 using Figgle;
+using System.Collections.Generic;
 
 namespace Chatbot
 {
     class Program
     {
+        static string userName = "";
+        static string userInterest = "";
+
+        static Dictionary<string, List<string>> keywordResponses = new Dictionary<string, List<string>>()
+        {
+            { "password", new List<string>{
+                "Use strong, unique passwords for each account.",
+                "Avoid using personal information in your passwords.",
+                "Consider using a password manager to generate and store complex passwords." } },
+
+            { "scam", new List<string>{
+                "Scams often trick individuals into giving away personal or financial information.",
+                "Be skeptical of unsolicited messages asking for money or information.",
+                "Never click unknown links or download suspicious attachments." } },
+
+            { "privacy", new List<string>{
+                "Privacy is key to protecting your identity online.",
+                "Review privacy settings on your social media accounts.",
+                "Avoid sharing sensitive information on unsecured platforms." } },
+
+            { "phishing", new List<string>{
+                "Be cautious of emails asking for personal info.",
+                "Verify links before clicking—they might lead to fake websites.",
+                "Phishers often pose as trusted sources like banks or services." } },
+
+            { "safe browsing", new List<string>{
+                "Always use HTTPS websites.",
+                "Keep your browser and antivirus updated.",
+                "Don't download software from untrusted sources." } },
+        };
+
         static void Main(string[] args)
         {
             Console.Title = "Cybersecurity Awareness Bot";
             Console.Clear();
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            // Play the voice greeting
             PlayGreeting();
-
-            // Display the ASCII art after the greeting
             DisplayAsciiArt();
-
-            // Asking for user input
             UserInput();
+        }
 
-         }
-        // Method for playing the voice recording
         static void PlayGreeting()
         {
             try
             {
-
-                string relativePath = @"Audio/AvuzwaKwetana/voice greeting2.wav"; // Notice the folder name spelling
-
-                // Convert it to an absolute path
+                string relativePath = @"Audio/AvuzwaKwetana/voice greeting2.wav";
                 string absolutePath = Path.GetFullPath(relativePath);
                 Console.ForegroundColor = ConsoleColor.Yellow;
-
-                // Print the full file path to the console
                 Console.WriteLine("Looking for file at: " + absolutePath);
                 Console.ResetColor();
 
-
-                // Try loading and playing the sound
                 using (SoundPlayer player = new SoundPlayer(absolutePath))
                 {
-                    player.Load();  // Load the audio file
-                    player.PlaySync();  // Play the audio file synchronously
+                    player.Load();
+                    player.PlaySync();
                 }
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error playing voice greeting: " + ex.Message); 
+                Console.WriteLine("Error playing voice greeting: " + ex.Message);
                 Console.ResetColor();
-
             }
         }
-        // Method for displaying the logo
+
         static void DisplayAsciiArt()
         {
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine(FiggleFonts.Standard.Render("CyberSecurity Awareness Bot"));
             Console.ResetColor();
-
-          
         }
 
         static void UserInput()
         {
-            Console.ForegroundColor= ConsoleColor.Blue; 
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("\nPlease enter your name: ");
             Console.ResetColor();
-            string Name = Console.ReadLine()?.Trim();
+            userName = Console.ReadLine()?.Trim();
 
-            while (string.IsNullOrEmpty(Name))
+            while (string.IsNullOrEmpty(userName))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Chatbot: ");
+                Console.Write("Chatbot: ");
                 DisplayTypingEffect("Name cannot be empty. Please enter your name: ");
                 Console.ResetColor();
-                Name = Console.ReadLine()?.Trim();
+                userName = Console.ReadLine()?.Trim();
             }
 
-
-            string message = $"Hello, {Name}! Welcome to the Cybersecurity Awareness Bot. I am here to help you say safe online";
-            DisplayTypingEffect(message);
-            
+            string welcome = $"Hello, {userName}! Welcome to the Cybersecurity Awareness Bot.";
+            DisplayTypingEffect(welcome);
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(new string('*', message.Length + 4));
-            string borderedMessage = $"* {message} *";
-            Console.WriteLine(new string('*', message.Length + 4));
+            Console.WriteLine(new string('*', welcome.Length + 4));
+            Console.WriteLine($"* {welcome} *");
+            Console.WriteLine(new string('*', welcome.Length + 4));
             Console.ResetColor();
-            
+
             Console.WriteLine("\nAsk me anything about cybersecurity, or type 'exit' to leave.\n");
 
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.WriteLine("You: ");
+                Console.Write("You: ");
                 Console.ResetColor();
-                string userInput = Console.ReadLine()?.Trim().ToLower();
+                string userInput = Console.ReadLine()?.Trim();
 
                 if (string.IsNullOrEmpty(userInput))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write("Chatbot: ");
-                    DisplayTypingEffect("Chatbot: Please enter a valid question.");
+                    DisplayTypingEffect("Please enter a valid question.");
                     Console.ResetColor();
                     continue;
                 }
 
-                if (userInput == "exit")
+                if (userInput.ToLower() == "exit")
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("Chatbot: ");
-                    DisplayTypingEffect("Chatbot: Stay safe online! Goodbye.");
+                    DisplayTypingEffect("Stay safe online! Goodbye.");
                     Console.ResetColor();
                     break;
                 }
 
                 string response = GetResponse(userInput);
-
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Chatbot: ");
-                DisplayTypingEffect(GetResponse(userInput));
+                Console.Write("Chatbot: ");
+                DisplayTypingEffect(response);
                 Console.ResetColor();
             }
         }
 
-        //Method to handle chatbot resposes
         static string GetResponse(string input)
         {
-            switch (input.Trim().ToLower()) // Trim removes leading/trailing spaces, ToLower is useful for case-insensitive comparisons or standardizing the format of strings
+            string lowered = input.ToLower();
+
+            if (lowered.Contains("worried") || lowered.Contains("scared"))
+                return "It's completely understandable to feel that way. Let's go over some tips to help you feel more secure.";
+
+            if (lowered.Contains("frustrated") || lowered.Contains("angry"))
+                return "I'm here to help. Cybersecurity can be tricky, but you're not alone!";
+
+            if (lowered.Contains("curious") || lowered.Contains("interested"))
+                return "Curiosity is great! Let me know what you'd like to learn more about.";
+
+            foreach (var keyword in keywordResponses.Keys)
             {
-                case "How are you?":
-                    return "I'm just a bot, but I'm always ready to help with cybersecurity advice!";
-                case "What's your purpose?":
-                    return "My purpose is to provide cybersecurity awareness and tips to keep you safe online.";
-                case "What can I ask you about?":
-                    return "You can ask me about password safety, phishing, safe browsing, and more!";
-                case "password safety":
-                    return "Use strong, unique passwords for each account. A password manager can assist!";
-                case "phishing":
-                    return "Be cautious of emails asking for personal info. Verify links before clicking!";
-                case "safe browsing":
-                    return "Always check website URLs and use HTTPS. Avoid downloading files from unknown sources.";
-                default:
-                    return "I'm not sure about that. Try asking about Password safety, Phishing, or Safe browsing!";
+                if (lowered.Contains(keyword))
+                {
+                    userInterest = keyword;
+                    var responses = keywordResponses[keyword];
+                    Random rand = new Random();
+                    return responses[rand.Next(responses.Count)] +
+                        (!string.IsNullOrEmpty(userInterest) ? $"\nAs someone interested in {userInterest}, you should also check your privacy settings regularly." : "");
+                }
             }
+
+            if (lowered.Contains("what's your purpose") || lowered.Contains("your purpose"))
+                return "My purpose is to provide cybersecurity awareness and tips to keep you safe online.";
+
+            if (lowered.Contains("what can i ask") || lowered.Contains("help with"))
+                return "You can ask me about password safety, phishing, safe browsing, privacy, scams, and more!";
+
+            if (!string.IsNullOrEmpty(userInterest))
+                return $"Earlier you mentioned you're interested in {userInterest}. Want to learn more about it?";
+
+            return "I'm not sure I understand. Can you try rephrasing or ask about passwords, phishing, or privacy?";
         }
 
         static void DisplayTypingEffect(string message, int delay = 50)
@@ -157,10 +184,11 @@ namespace Chatbot
             foreach (char c in message)
             {
                 Console.Write(c);
-                System.Threading.Thread.Sleep(delay);// delay for effect
+                Thread.Sleep(delay);
             }
             Console.WriteLine();
         }
     }
 }
+
 
